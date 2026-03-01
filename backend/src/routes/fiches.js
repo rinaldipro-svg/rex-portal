@@ -2,8 +2,6 @@ import express from 'express';
 import { z } from 'zod';
 import { query } from '../db/config.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { generatePDF } from '../services/pdf.js';
-import { uploadToS3 } from '../services/storage.js';
 
 const router = express.Router();
 
@@ -219,66 +217,24 @@ router.delete('/:id', authenticateToken, async (req, res) => {
   }
 });
 
-// POST /api/fiches/:id/publish - Publier une fiche et générer le PDF
+// POST /api/fiches/:id/publish - Publier la fiche (Changement de statut simple)
 router.post('/:id/publish', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Récupérer la fiche
-    const ficheResult = await query(
-      'SELECT * FROM fiches WHERE id = $1 AND user_id = $2',
-      [id, req.user.id]
-    );
-
-    if (ficheResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Fiche non trouvée' });
-    }
-
-    const fiche = ficheResult.rows[0];
-
-    // Vérifier si on est en mode développement
-    const isDev = process.env.NODE_ENV === 'development';
-
-    if (isDev) {
-      // MODE DEV : Publier sans générer le PDF
-      console.log('🔧 Mode développement : Publication sans génération PDF réelle');
-      
-      const updateResult = await query(
-        `UPDATE fiches SET 
-          status = 'published',
-          pdf_url = $1,
-          published_at = CURRENT_TIMESTAMP,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = $2
-        RETURNING *`,
-        [`/api/fiches/${id}/pdf-preview`, id]
-      );
-
-      return res.json({
-        success: true,
-        fiche: updateResult.rows[0],
-        message: 'Mode développement : PDF simulé (sera généré en production)'
-      });
-    }
-
-    // MODE PRODUCTION : Générer le PDF réel
-    console.log('📄 Génération du PDF...');
-    const pdfBuffer = await generatePDF(fiche);
-    
-    console.log('☁️ Upload sur S3/R2...');
-    const { url, key } = await uploadToS3(pdfBuffer, `rex-${id}.pdf`);
-    
     const updateResult = await query(
       `UPDATE fiches SET 
         status = 'published',
-        pdf_url = $1,
-        pdf_key = $2,
         published_at = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $3
+      WHERE id = $1 AND user_id = $2
       RETURNING *`,
-      [url, key, id]
+      [id, req.user.id]
     );
+
+    if (updateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Fiche non trouvée ou non autorisée' });
+    }
 
     res.json({
       success: true,
@@ -286,44 +242,7 @@ router.post('/:id/publish', authenticateToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Publish fiche error:', error);
-    res.status(500).json({ 
-      error: 'Erreur lors de la publication de la fiche',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-});
-
-// GET /api/fiches/:id/pdf-preview - Générer et afficher le PDF (dev & prod)
-router.get('/:id/pdf-preview', authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Récupérer la fiche
-    const result = await query(
-      'SELECT * FROM fiches WHERE id = $1 AND user_id = $2',
-      [id, req.user.id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Fiche non trouvée' });
-    }
-
-    const fiche = result.rows[0];
-
-    // Générer le PDF
-    console.log('📄 Génération du PDF pour preview...');
-    const pdfBuffer = await generatePDF(fiche);
-
-    // Envoyer le PDF directement
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="rex-${fiche.titre.substring(0, 30)}.pdf"`);
-    res.send(pdfBuffer);
-  } catch (error) {
-    console.error('PDF preview error:', error);
-    res.status(500).json({ 
-      error: 'Erreur lors de la génération du PDF',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    res.status(500).json({ error: 'Erreur lors de la publication de la fiche' });
   }
 });
 
