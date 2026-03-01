@@ -46,7 +46,7 @@ router.post('/register', async (req, res) => {
 
     // Générer le token JWT
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -95,7 +95,7 @@ router.post('/login', async (req, res) => {
 
     // Générer le token JWT
     const token = jwt.sign(
-      { userId: user.id, email: user.email },
+      { userId: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
@@ -119,18 +119,16 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Vérifier le token et récupérer l'utilisateur
+// Vérifier le token et récupérer l'utilisateur (DB query pour created_at à jour)
 router.get('/me', authenticateToken, async (req, res) => {
   try {
     const result = await query(
       'SELECT id, email, first_name, last_name, role, created_at FROM users WHERE id = $1',
       [req.user.id]
     );
-
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+      return res.status(401).json({ error: 'Utilisateur non trouvé' });
     }
-
     const user = result.rows[0];
     res.json({
       id: user.id,
@@ -141,8 +139,8 @@ router.get('/me', authenticateToken, async (req, res) => {
       createdAt: user.created_at
     });
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération de l\'utilisateur' });
+    console.error('Me error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 

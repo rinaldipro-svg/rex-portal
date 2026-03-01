@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User } from './api';
+import { User, Fiche } from './api';
 
 interface AuthState {
   user: User | null;
@@ -16,13 +16,11 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       setAuth: (user, token) => {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(user));
+        localStorage.setItem('token', token); // read by api.ts interceptor
         set({ user, token });
       },
       logout: () => {
         localStorage.removeItem('token');
-        localStorage.removeItem('user');
         set({ user: null, token: null });
       },
       isAuthenticated: () => {
@@ -37,10 +35,10 @@ export const useAuthStore = create<AuthState>()(
 );
 
 interface EditorState {
-  currentFiche: any | null;
+  currentFiche: Fiche | null;
   isModified: boolean;
-  setCurrentFiche: (fiche: any) => void;
-  updateField: (field: string, value: any) => void;
+  setCurrentFiche: (fiche: Fiche) => void;
+  updateField: (field: keyof Fiche, value: string) => void;
   resetEditor: () => void;
   setModified: (modified: boolean) => void;
 }
@@ -51,7 +49,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   setCurrentFiche: (fiche) => set({ currentFiche: fiche, isModified: false }),
   updateField: (field, value) =>
     set((state) => ({
-      currentFiche: { ...state.currentFiche, [field]: value },
+      currentFiche: state.currentFiche ? { ...state.currentFiche, [field]: value } : null,
       isModified: true,
     })),
   resetEditor: () => set({ currentFiche: null, isModified: false }),

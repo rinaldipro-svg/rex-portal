@@ -60,30 +60,13 @@ useEffect(() => {
     try {
       const { data } = await generateApi.generate(userInput);
       
-      setFiche({
-        titre: data.data.titre || '',
-        infrastructure: data.data.infrastructure || '',
-        unspsc_code: data.data.unspsc_code || '',
-        unspsc_desc: data.data.unspsc_desc || '',
-        localisation: data.data.localisation || '',
-        contrainte: data.data.contrainte || '',
-        environnement: data.data.environnement || '',
-        lignerouge: data.data.lignerouge || '',
-        technologie: data.data.technologie || '',
-        ingenierie: data.data.ingenierie || '',
-        securite: data.data.securite || '',
-        metrique1_val: data.data.metrique1_val || '',
-        metrique1_titre: data.data.metrique1_titre || '',
-        metrique1_desc: data.data.metrique1_desc || '',
-        metrique2_val: data.data.metrique2_val || '',
-        metrique2_titre: data.data.metrique2_titre || '',
-        metrique2_desc: data.data.metrique2_desc || '',
-        metrique3_val: data.data.metrique3_val || '',
-        metrique3_titre: data.data.metrique3_titre || '',
-        metrique3_desc: data.data.metrique3_desc || '',
-        citation: data.data.citation || '',
-        auteur: data.data.auteur || '',
-      });
+      // Map AI response directly — field names match the fiche schema
+      setFiche((prev) => ({
+        ...prev,
+        ...Object.fromEntries(
+          Object.entries(data.data).map(([k, v]) => [k, v ?? ''])
+        ),
+      }));
 
       setShowModal(false);
       setUserInput('');

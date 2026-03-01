@@ -20,11 +20,6 @@ app.set('trust proxy', 1);
 // Middleware de sécurité
 app.use(helmet());
 
-// --- CORS TELEMETRY ---
-console.log('====== BOOT TELEMETRY ======');
-console.log('Targeted CORS Origin (FRONTEND_URL):', process.env.FRONTEND_URL);
-console.log('============================');
-
 // CORS
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -43,7 +38,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
@@ -53,12 +48,12 @@ app.use('/api/fiches', fichesRoutes);
 app.use('/api/generate', generateRoutes);
 
 // 404 handler
-app.use((req, res) => {
+app.use((_req, res) => {
   res.status(404).json({ error: 'Route non trouvée' });
 });
 
 // Error handler
-app.use((err, req, res, next) => {
+app.use((err, _req, res, _next) => {
   console.error('Error:', err);
   
   const statusCode = err.statusCode || 500;

@@ -37,47 +37,45 @@ router.get('/', authenticateToken, async (req, res) => {
   try {
     const { status, search, limit = 50, offset = 0 } = req.query;
 
-    let queryText = `
-      SELECT 
-        id, titre, infrastructure, localisation, status, 
-        pdf_url, created_at, updated_at, published_at
-      FROM fiches 
-      WHERE user_id = $1
-    `;
+    // Build WHERE conditions
+    const conditions = ['user_id = $1'];
     const params = [req.user.id];
     let paramIndex = 2;
 
     // Filtrer par status
     if (status && ['draft', 'published', 'archived'].includes(status)) {
-      queryText += ` AND status = $${paramIndex}`;
+      conditions.push(`status = $${paramIndex}`);
       params.push(status);
       paramIndex++;
     }
 
     // Recherche textuelle
     if (search) {
-      queryText += ` AND search_vector @@ plainto_tsquery('french', $${paramIndex})`;
+      conditions.push(`search_vector @@ plainto_tsquery('french', $${paramIndex})`);
       params.push(search);
       paramIndex++;
     }
 
-    queryText += ` ORDER BY created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    const whereClause = conditions.join(' AND ');
+
+    // Single query using COUNT(*) OVER() to get total without a second round-trip
+    const queryText = `
+      SELECT
+        id, titre, infrastructure, localisation, status,
+        pdf_url, created_at, updated_at, published_at,
+        COUNT(*) OVER() AS total_count
+      FROM fiches
+      WHERE ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
     params.push(parseInt(limit), parseInt(offset));
 
     const result = await query(queryText, params);
 
-    // Compter le total
-    let countQuery = 'SELECT COUNT(*) FROM fiches WHERE user_id = $1';
-    const countParams = [req.user.id];
-    if (status) {
-      countQuery += ' AND status = $2';
-      countParams.push(status);
-    }
-    const countResult = await query(countQuery, countParams);
-
     res.json({
-      fiches: result.rows,
-      total: parseInt(countResult.rows[0].count),
+      fiches: result.rows.map(({ total_count, ...fiche }) => fiche),
+      total: result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0,
       limit: parseInt(limit),
       offset: parseInt(offset)
     });
@@ -153,16 +151,6 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const { id } = req.params;
     const data = ficheSchema.parse(req.body);
 
-    // Vérifier que la fiche appartient à l'utilisateur
-    const check = await query(
-      'SELECT id FROM fiches WHERE id = $1 AND user_id = $2',
-      [id, req.user.id]
-    );
-
-    if (check.rows.length === 0) {
-      return res.status(404).json({ error: 'Fiche non trouvée' });
-    }
-
     const result = await query(
       `UPDATE fiches SET
         titre = $1, infrastructure = $2, unspsc_code = $3, unspsc_desc = $4,
@@ -173,7 +161,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
         metrique3_val = $18, metrique3_titre = $19, metrique3_desc = $20,
         citation = $21, auteur = $22, status = $23,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $24
+      WHERE id = $24 AND user_id = $25
       RETURNING *`,
       [
         data.titre, data.infrastructure, data.unspsc_code, data.unspsc_desc,
@@ -182,9 +170,13 @@ router.put('/:id', authenticateToken, async (req, res) => {
         data.metrique1_val, data.metrique1_titre, data.metrique1_desc,
         data.metrique2_val, data.metrique2_titre, data.metrique2_desc,
         data.metrique3_val, data.metrique3_titre, data.metrique3_desc,
-        data.citation, data.auteur, data.status, id
+        data.citation, data.auteur, data.status, id, req.user.id
       ]
     );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Fiche non trouvée' });
+    }
 
     res.json(result.rows[0]);
   } catch (error) {

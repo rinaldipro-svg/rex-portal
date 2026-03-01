@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { query } from '../db/config.js';
 
-export const authenticateToken = async (req, res, next) => {
+export const authenticateToken = (req, res, next) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -11,18 +10,15 @@ export const authenticateToken = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Vérifier que l'utilisateur existe toujours
-    const result = await query(
-      'SELECT id, email, role FROM users WHERE id = $1',
-      [decoded.userId]
-    );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Utilisateur non trouvé' });
-    }
-
-    req.user = result.rows[0];
+    // Read user identity from JWT — no DB round-trip needed
+    req.user = {
+      id: decoded.userId,
+      email: decoded.email,
+      first_name: decoded.firstName,
+      last_name: decoded.lastName,
+      role: decoded.role,
+    };
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -35,21 +31,20 @@ export const authenticateToken = async (req, res, next) => {
   }
 };
 
-export const optionalAuth = async (req, res, next) => {
+export const optionalAuth = (req, _res, next) => {
   try {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token) {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const result = await query(
-        'SELECT id, email, role FROM users WHERE id = $1',
-        [decoded.userId]
-      );
-      
-      if (result.rows.length > 0) {
-        req.user = result.rows[0];
-      }
+      req.user = {
+        id: decoded.userId,
+        email: decoded.email,
+        first_name: decoded.firstName,
+        last_name: decoded.lastName,
+        role: decoded.role,
+      };
     }
     next();
   } catch (error) {

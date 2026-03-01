@@ -4,6 +4,19 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY
 });
 
+export const MODEL = 'claude-sonnet-4-20250514';
+const HAIKU_MODEL = 'claude-haiku-4-5-20251001';
+
+// Lightweight API connectivity check — costs just 1 output token
+export async function pingAPI() {
+  const message = await anthropic.messages.create({
+    model: MODEL,
+    max_tokens: 1,
+    messages: [{ role: 'user', content: 'ping' }]
+  });
+  return !!message.id;
+}
+
 const SYSTEM_PROMPT = `Tu es un ingénieur senior expert en rédaction technique travaillant pour Hydro-Québec. 
 
 Ta mission est de transformer des notes brutes en compte-rendu technique formel (Dossier REX - Retour d'Expérience) respectant la "Doctrine Hydro-Québec".
@@ -52,7 +65,7 @@ Réponds UNIQUEMENT avec un objet JSON valide (pas de markdown, pas de texte exp
 export async function generateREXContent(userInput) {
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: MODEL,
       max_tokens: 2000,
       temperature: 0.7,
       system: SYSTEM_PROMPT,
@@ -121,20 +134,14 @@ export async function generateREXContent(userInput) {
 export async function improveField(fieldName, currentValue, context) {
   try {
     const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: HAIKU_MODEL,
       max_tokens: 500,
       temperature: 0.8,
+      system: 'Tu es un expert en rédaction technique pour Hydro-Québec. Améliore le texte fourni en le rendant plus précis, professionnel et concis. Réponds UNIQUEMENT avec le texte amélioré, sans explication.',
       messages: [
         {
           role: 'user',
-          content: `Tu es un expert en rédaction technique pour Hydro-Québec.
-
-Contexte : ${context}
-
-Améliore ce texte pour le champ "${fieldName}" :
-"${currentValue}"
-
-Réponds UNIQUEMENT avec le texte amélioré, sans explication.`
+          content: `Contexte : ${context}\n\nChamp "${fieldName}" :\n${currentValue}`
         }
       ]
     });

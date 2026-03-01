@@ -3,15 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
-import { fichesApi } from '@/lib/api';
-
-type FicheData = any;
+import { fichesApi, Fiche } from '@/lib/api';
 
 export default function EditorPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuthStore();
-  const [fiche, setFiche] = useState<FicheData | null>(null);
+  const [fiche, setFiche] = useState<Fiche | null>(null);
   const [loading, setLoading] = useState(true);
   const [ficheId, setFicheId] = useState<string | null>(null);
 
@@ -46,7 +44,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
     try {
       if (!ficheId) return;
       const { data } = await fichesApi.get(ficheId);
-      setFiche(data as any);
+      setFiche(data);
     } catch (error) {
       console.error('Erreur chargement fiche:', error);
     } finally {

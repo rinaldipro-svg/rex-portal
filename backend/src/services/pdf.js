@@ -224,10 +224,10 @@ const generateHTML = (fiche) => {
     </div>
     ` : ''}
     
-    ${fiche.ligne_rouge ? `
+    ${fiche.lignerouge ? `
     <div class="warning-box">
         <div class="warning-title">⚠️ LIGNE ROUGE - Limite Critique</div>
-        <div>${fiche.ligne_rouge}</div>
+        <div>${fiche.lignerouge}</div>
     </div>
     ` : ''}
     

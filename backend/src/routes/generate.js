@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { authenticateToken } from '../middleware/auth.js';
-import { generateREXContent, improveField } from '../services/anthropic.js';
+import { generateREXContent, improveField, pingAPI, MODEL } from '../services/anthropic.js';
 
 const router = express.Router();
 
@@ -77,19 +77,19 @@ router.post('/improve', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/generate/test - Test de connexion à l'API
+// GET /api/generate/test - Test de connexion à l'API (minimal 1-token ping)
 router.get('/test', authenticateToken, async (req, res) => {
   try {
-    const result = await generateREXContent('Test de connexion à l\'API Anthropic');
-    res.json({ 
-      success: true, 
+    await pingAPI();
+    res.json({
+      success: true,
       message: 'Connexion à l\'API Anthropic fonctionnelle',
-      model: 'claude-sonnet-4-20250514'
+      model: MODEL
     });
   } catch (error) {
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
+    res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 });
