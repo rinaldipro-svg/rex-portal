@@ -1,23 +1,11 @@
 'use client';
 
-import { useEffect, useState, use } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
-import { fichesApi, Fiche } from '@/lib/api';
+import { fichesApi } from '@/lib/api';
 
-// ✅ CORRIGER : FicheData doit avoir les mêmes propriétés que Fiche
-interface FicheData extends Fiche {
-  // Si Fiche n'a pas ces propriétés, les ajouter ici avec des valeurs par défaut
-  metrique1_val?: string;
-  metrique1_titre?: string;
-  metrique1_desc?: string;
-  metrique2_val?: string;
-  metrique2_titre?: string;
-  metrique2_desc?: string;
-  metrique3_val?: string;
-  metrique3_titre?: string;
-  metrique3_desc?: string;
-}
+type FicheData = any;
 
 export default function EditorPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -28,7 +16,6 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
   const [ficheId, setFicheId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Unwrap la Promise params avec use()
     const unwrapParams = async () => {
       const resolvedParams = await Promise.resolve(params);
       setFicheId(resolvedParams.id);
@@ -48,7 +35,6 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
   }, [ficheId]);
 
   useEffect(() => {
-    // Déclencher l'impression si ?print=true
     if (searchParams.get('print') === 'true' && fiche) {
       setTimeout(() => {
         window.print();
@@ -60,20 +46,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
     try {
       if (!ficheId) return;
       const { data } = await fichesApi.get(ficheId);
-      // ✅ CORRIGER : S'assurer que toutes les propriétés existent
-      const ficheData: FicheData = {
-        ...data,
-        metrique1_val: data.metrique1_val || '',
-        metrique1_titre: data.metrique1_titre || '',
-        metrique1_desc: data.metrique1_desc || '',
-        metrique2_val: data.metrique2_val || '',
-        metrique2_titre: data.metrique2_titre || '',
-        metrique2_desc: data.metrique2_desc || '',
-        metrique3_val: data.metrique3_val || '',
-        metrique3_titre: data.metrique3_titre || '',
-        metrique3_desc: data.metrique3_desc || '',
-      };
-      setFiche(data as any);
+      setFiche(data as FicheData);
     } catch (error) {
       console.error('Erreur chargement fiche:', error);
     } finally {
@@ -110,7 +83,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="min-h-screen bg-gray-100 print:bg-white">
-      {/* Barre d'outils (Invisible à l'impression) */}
+      {/* Barre d'outils */}
       <div className="no-print bg-gray-900 text-white p-4 sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
@@ -149,7 +122,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                 Dossier de Qualification Technique
               </p>
               <h1 className="text-3xl font-extrabold text-hqblue leading-tight max-w-2xl">
-                {fiche.titre || 'Sans titre'}
+                {fiche?.titre || 'Sans titre'}
               </h1>
             </div>
             <div className="text-right">
@@ -162,7 +135,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
 
           {/* Accroche */}
           <div className="mb-10 text-base text-gray-600 leading-relaxed font-medium border-l-4 border-hqblue pl-4">
-            {fiche.infrastructure || 'Infrastructure non spécifiée'}
+            {fiche?.infrastructure || 'Infrastructure non spécifiée'}
           </div>
 
           {/* Section 1: Qualification */}
@@ -179,7 +152,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                   </svg>
                   Infrastructure
                 </p>
-                <p className="font-bold text-gray-900 text-sm">{fiche.infrastructure || 'N/A'}</p>
+                <p className="font-bold text-gray-900 text-sm">{fiche?.infrastructure || 'N/A'}</p>
               </div>
 
               {/* Code UNSPSC */}
@@ -190,8 +163,8 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                   </svg>
                   Code UNSPSC
                 </p>
-                <p className="font-bold text-hqblue text-sm">{fiche.unspsc_code || 'N/A'}</p>
-                <p className="text-xs text-gray-500 mt-1">{fiche.unspsc_desc || ''}</p>
+                <p className="font-bold text-hqblue text-sm">{fiche?.unspsc_code || 'N/A'}</p>
+                <p className="text-xs text-gray-500 mt-1">{fiche?.unspsc_desc || ''}</p>
               </div>
 
               {/* Localisation */}
@@ -202,7 +175,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                   </svg>
                   Localisation & Climat
                 </p>
-                <p className="font-bold text-gray-900 text-sm">{fiche.localisation || 'N/A'}</p>
+                <p className="font-bold text-gray-900 text-sm">{fiche?.localisation || 'N/A'}</p>
               </div>
             </div>
           </section>
@@ -223,7 +196,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-sm uppercase">La Contrainte Primordiale</h3>
-                  <p className="text-sm text-gray-700 mt-1">{fiche.contrainte || 'N/A'}</p>
+                  <p className="text-sm text-gray-700 mt-1">{fiche?.contrainte || 'N/A'}</p>
                 </div>
               </div>
 
@@ -236,7 +209,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-sm uppercase">L'Environnement Hostile</h3>
-                  <p className="text-sm text-gray-700 mt-1">{fiche.environnement || 'N/A'}</p>
+                  <p className="text-sm text-gray-700 mt-1">{fiche?.environnement || 'N/A'}</p>
                 </div>
               </div>
 
@@ -244,7 +217,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
               <div className="flex gap-4 items-start border-l-2 border-hqorange pl-4 ml-3 mt-6">
                 <div>
                   <h3 className="font-bold text-hqorange text-sm uppercase">La Ligne Rouge Opérationnelle</h3>
-                  <p className="text-sm text-gray-800 font-medium mt-1">{fiche.lignerouge || 'N/A'}</p>
+                  <p className="text-sm text-gray-800 font-medium mt-1">{fiche?.lignerouge || 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -271,7 +244,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
               <div className="border border-gray-200 p-5 rounded-lg shadow-sm bg-white">
                 <h3 className="font-bold text-hqblue text-sm mb-2 border-b pb-2">Technologie Déployée</h3>
                 <p className="text-sm text-gray-700 leading-relaxed">
-                  {fiche.technologie || 'N/A'}
+                  {fiche?.technologie || 'N/A'}
                 </p>
               </div>
               
@@ -284,7 +257,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                     </svg>
                     Ingénierie Inverse et Intégration
                   </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{fiche.ingenierie || 'N/A'}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{fiche?.ingenierie || 'N/A'}</p>
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-900 text-sm flex items-center gap-2 mb-1">
@@ -293,7 +266,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
                     </svg>
                     Doctrine de Sécurité (LOTO)
                   </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{fiche.securite || 'N/A'}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{fiche?.securite || 'N/A'}</p>
                 </div>
               </div>
             </div>
@@ -308,29 +281,29 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
             <div className="grid grid-cols-3 gap-8">
               {/* Métrique 1 */}
               <div>
-                <div className="text-hqorange font-bold text-4xl mb-2">{fiche.metrique1_val || '0'}</div>
+                <div className="text-hqorange font-bold text-4xl mb-2">{fiche?.metrique1_val || '0'}</div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide mb-2">
-                  {fiche.metrique1_titre || 'Métrique 1'}
+                  {fiche?.metrique1_titre || 'Métrique 1'}
                 </h3>
-                <p className="text-xs text-slate-400">{fiche.metrique1_desc || ''}</p>
+                <p className="text-xs text-slate-400">{fiche?.metrique1_desc || ''}</p>
               </div>
 
               {/* Métrique 2 */}
               <div>
-                <div className="text-hqorange font-bold text-4xl mb-2">{fiche.metrique2_val || '0'}</div>
+                <div className="text-hqorange font-bold text-4xl mb-2">{fiche?.metrique2_val || '0'}</div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide mb-2">
-                  {fiche.metrique2_titre || 'Métrique 2'}
+                  {fiche?.metrique2_titre || 'Métrique 2'}
                 </h3>
-                <p className="text-xs text-slate-400">{fiche.metrique2_desc || ''}</p>
+                <p className="text-xs text-slate-400">{fiche?.metrique2_desc || ''}</p>
               </div>
 
               {/* Métrique 3 */}
               <div>
-                <div className="text-hqorange font-bold text-4xl mb-2">{fiche.metrique3_val || '0'}</div>
+                <div className="text-hqorange font-bold text-4xl mb-2">{fiche?.metrique3_val || '0'}</div>
                 <h3 className="text-sm font-bold text-white uppercase tracking-wide mb-2">
-                  {fiche.metrique3_titre || 'Métrique 3'}
+                  {fiche?.metrique3_titre || 'Métrique 3'}
                 </h3>
-                <p className="text-xs text-slate-400">{fiche.metrique3_desc || ''}</p>
+                <p className="text-xs text-slate-400">{fiche?.metrique3_desc || ''}</p>
               </div>
             </div>
           </section>
@@ -343,10 +316,10 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
             
             <blockquote className="border-l-4 border-hqblue bg-blue-50/50 p-6 rounded-r-lg">
               <p className="text-sm text-gray-800 font-medium italic mb-3 leading-relaxed">
-                "{fiche.citation || 'Citation non disponible'}"
+                "{fiche?.citation || 'Citation non disponible'}"
               </p>
               <footer className="text-xs font-bold text-hqblue">
-                — {fiche.auteur || 'Auteur non spécifié'}
+                — {fiche?.auteur || 'Auteur non spécifié'}
               </footer>
             </blockquote>
           </section>
