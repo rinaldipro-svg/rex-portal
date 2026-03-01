@@ -73,7 +73,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
         metrique3_titre: data.metrique3_titre || '',
         metrique3_desc: data.metrique3_desc || '',
       };
-      setFiche(ficheData);
+      setFiche(data as any);
     } catch (error) {
       console.error('Erreur chargement fiche:', error);
     } finally {
