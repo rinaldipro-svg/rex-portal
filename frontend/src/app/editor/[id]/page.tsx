@@ -46,7 +46,7 @@ export default function EditorPage({ params }: { params: Promise<{ id: string }>
     try {
       if (!ficheId) return;
       const { data } = await fichesApi.get(ficheId);
-      setFiche(data as FicheData);
+      setFiche(data as any);
     } catch (error) {
       console.error('Erreur chargement fiche:', error);
     } finally {
