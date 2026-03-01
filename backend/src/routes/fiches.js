@@ -16,7 +16,7 @@ const ficheSchema = z.object({
   localisation: z.string().optional(),
   contrainte: z.string().optional(),
   environnement: z.string().optional(),
-  ligne_rouge: z.string().optional(),
+  lignerouge: z.string().optional(),
   technologie: z.string().optional(),
   ingenierie: z.string().optional(),
   securite: z.string().optional(),
@@ -118,7 +118,7 @@ router.post('/', authenticateToken, async (req, res) => {
     const result = await query(
       `INSERT INTO fiches (
         user_id, titre, infrastructure, unspsc_code, unspsc_desc,
-        localisation, contrainte, environnement, ligne_rouge,
+        localisation, contrainte, environnement, lignerouge,
         technologie, ingenierie, securite,
         metrique1_val, metrique1_titre, metrique1_desc,
         metrique2_val, metrique2_titre, metrique2_desc,
@@ -130,7 +130,7 @@ router.post('/', authenticateToken, async (req, res) => {
       ) RETURNING *`,
       [
         req.user.id, data.titre, data.infrastructure, data.unspsc_code, data.unspsc_desc,
-        data.localisation, data.contrainte, data.environnement, data.ligne_rouge,
+        data.localisation, data.contrainte, data.environnement, data.lignerouge,
         data.technologie, data.ingenierie, data.securite,
         data.metrique1_val, data.metrique1_titre, data.metrique1_desc,
         data.metrique2_val, data.metrique2_titre, data.metrique2_desc,
@@ -168,7 +168,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
     const result = await query(
       `UPDATE fiches SET
         titre = $1, infrastructure = $2, unspsc_code = $3, unspsc_desc = $4,
-        localisation = $5, contrainte = $6, environnement = $7, ligne_rouge = $8,
+        localisation = $5, contrainte = $6, environnement = $7, lignerouge = $8,
         technologie = $9, ingenierie = $10, securite = $11,
         metrique1_val = $12, metrique1_titre = $13, metrique1_desc = $14,
         metrique2_val = $15, metrique2_titre = $16, metrique2_desc = $17,
@@ -179,7 +179,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       RETURNING *`,
       [
         data.titre, data.infrastructure, data.unspsc_code, data.unspsc_desc,
-        data.localisation, data.contrainte, data.environnement, data.ligne_rouge,
+        data.localisation, data.contrainte, data.environnement, data.lignerouge,
         data.technologie, data.ingenierie, data.securite,
         data.metrique1_val, data.metrique1_titre, data.metrique1_desc,
         data.metrique2_val, data.metrique2_titre, data.metrique2_desc,
