@@ -14,6 +14,9 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Trust Railway's internal proxy
+app.set('trust proxy', 1);
+
 // Middleware de sécurité
 app.use(helmet());
 
