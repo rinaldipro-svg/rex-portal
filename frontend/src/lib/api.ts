@@ -57,7 +57,7 @@ export interface Fiche {
   localisation?: string;
   contrainte?: string;
   environnement?: string;
-  ligne_rouge?: string;
+  lignerouge?: string;
   technologie?: string;
   ingenierie?: string;
   securite?: string;
