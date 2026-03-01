@@ -17,6 +17,11 @@ const PORT = process.env.PORT || 3001;
 // Middleware de sécurité
 app.use(helmet());
 
+// --- CORS TELEMETRY ---
+console.log('====== BOOT TELEMETRY ======');
+console.log('Targeted CORS Origin (FRONTEND_URL):', process.env.FRONTEND_URL);
+console.log('============================');
+
 // CORS
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
