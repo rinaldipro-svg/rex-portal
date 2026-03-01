@@ -42,10 +42,11 @@ export default function EditorPage() {
 
   const [saved, setSaved] = useState(false);
 
+useEffect(() => {
   if (!isAuthenticated()) {
     router.push('/login');
-    return null;
   }
+}, []);
 
   const handleGenerate = async () => {
     if (!userInput.trim()) {
