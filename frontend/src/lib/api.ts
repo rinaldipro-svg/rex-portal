@@ -90,6 +90,52 @@ export interface GenerateResponse {
   };
 }
 
+export interface Template {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  is_shared: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+  titre?: string;
+  infrastructure?: string;
+  unspsc_code?: string;
+  unspsc_desc?: string;
+  localisation?: string;
+  contrainte?: string;
+  environnement?: string;
+  lignerouge?: string;
+  technologie?: string;
+  ingenierie?: string;
+  securite?: string;
+  metrique1_val?: string;
+  metrique1_titre?: string;
+  metrique1_desc?: string;
+  metrique2_val?: string;
+  metrique2_titre?: string;
+  metrique2_desc?: string;
+  metrique3_val?: string;
+  metrique3_titre?: string;
+  metrique3_desc?: string;
+  citation?: string;
+  auteur?: string;
+}
+
+export interface TemplateSection {
+  id: string;
+  name: string;
+  description?: string;
+  section_type: string;
+  content: string;
+  category: string;
+  is_shared: boolean;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // === AUTH ===
 export const authApi = {
   register: (data: {
@@ -146,6 +192,59 @@ export const generateApi = {
     }),
 
   test: () => api.get<{ success: boolean; message: string; model: string }>('/api/generate/test'),
+};
+
+// === TEMPLATES ===
+export const templatesApi = {
+  // Fiche Templates
+  list: (params?: {
+    category?: string;
+    search?: string;
+    limit?: number;
+    offset?: number;
+  }) =>
+    api.get<{
+      templates: Template[];
+      total: number;
+      limit: number;
+      offset: number;
+    }>('/api/templates', { params }),
+
+  get: (id: string) => api.get<Template>(`/api/templates/${id}`),
+
+  create: (data: Partial<Template>) => api.post<Template>('/api/templates', data),
+
+  update: (id: string, data: Partial<Template>) =>
+    api.put<Template>(`/api/templates/${id}`, data),
+
+  delete: (id: string) => api.delete<{ message: string }>(`/api/templates/${id}`),
+
+  // Template Sections
+  sections: {
+    list: (params?: {
+      section_type?: string;
+      category?: string;
+      search?: string;
+      limit?: number;
+      offset?: number;
+    }) =>
+      api.get<{
+        sections: TemplateSection[];
+        total: number;
+        limit: number;
+        offset: number;
+      }>('/api/templates/sections', { params }),
+
+    get: (id: string) => api.get<TemplateSection>(`/api/templates/sections/${id}`),
+
+    create: (data: Partial<TemplateSection>) =>
+      api.post<TemplateSection>('/api/templates/sections', data),
+
+    update: (id: string, data: Partial<TemplateSection>) =>
+      api.put<TemplateSection>(`/api/templates/sections/${id}`, data),
+
+    delete: (id: string) => api.delete<{ message: string }>(`/api/templates/sections/${id}`),
+  },
 };
 
 export default api;

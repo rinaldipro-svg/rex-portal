@@ -1,17 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
-import { generateApi, fichesApi } from '@/lib/api';
+import { generateApi, fichesApi, templatesApi } from '@/lib/api';
 
 export default function EditorPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isAuthenticated } = useAuthStore();
   
   const [showModal, setShowModal] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
   
   // État de la fiche
@@ -42,11 +44,52 @@ export default function EditorPage() {
 
   const [saved, setSaved] = useState(false);
 
-useEffect(() => {
-  if (!isAuthenticated()) {
-    router.push('/login');
-  }
-}, []);
+  useEffect(() => {
+    if (!isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+
+    const loadTemplateIfProvided = async () => {
+      const templateId = searchParams.get('templateId');
+      if (templateId) {
+        try {
+          const { data: template } = await templatesApi.get(templateId);
+          // Load template data into fiche editor
+          setFiche((prev) => ({
+            ...prev,
+            titre: template.titre || 'REX XX : Titre à générer',
+            infrastructure: template.infrastructure || '',
+            unspsc_code: template.unspsc_code || '',
+            unspsc_desc: template.unspsc_desc || '',
+            localisation: template.localisation || '',
+            contrainte: template.contrainte || '',
+            environnement: template.environnement || '',
+            lignerouge: template.lignerouge || '',
+            technologie: template.technologie || '',
+            ingenierie: template.ingenierie || '',
+            securite: template.securite || '',
+            metrique1_val: template.metrique1_val || '',
+            metrique1_titre: template.metrique1_titre || '',
+            metrique1_desc: template.metrique1_desc || '',
+            metrique2_val: template.metrique2_val || '',
+            metrique2_titre: template.metrique2_titre || '',
+            metrique2_desc: template.metrique2_desc || '',
+            metrique3_val: template.metrique3_val || '',
+            metrique3_titre: template.metrique3_titre || '',
+            metrique3_desc: template.metrique3_desc || '',
+            citation: template.citation || '',
+            auteur: template.auteur || '',
+          }));
+        } catch (err) {
+          console.error('Error loading template:', err);
+        }
+      }
+      setInitialLoading(false);
+    };
+
+    loadTemplateIfProvided();
+  }, [isAuthenticated, searchParams, router]);
 
   const handleGenerate = async () => {
     if (!userInput.trim()) {
@@ -113,7 +156,13 @@ useEffect(() => {
         </div>
       </nav>
 
-      {/* Toolbar */}
+      {initialLoading ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="text-lg font-semibold text-gray-600 mb-2">Chargement...</div>
+          </div>
+        </div>
+      ) : (
       <div className="bg-white border-b border-gray-200 shadow-sm sticky top-16 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           <span className="text-sm font-medium text-gray-600">
@@ -331,6 +380,7 @@ useEffect(() => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

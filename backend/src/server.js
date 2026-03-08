@@ -8,6 +8,7 @@ import rateLimit from 'express-rate-limit';
 import authRoutes from './routes/auth.js';
 import fichesRoutes from './routes/fiches.js';
 import generateRoutes from './routes/generate.js';
+import templatesRoutes from './routes/templates.js';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/fiches', fichesRoutes);
 app.use('/api/generate', generateRoutes);
+app.use('/api/templates', templatesRoutes);
 
 // 404 handler
 app.use((_req, res) => {
