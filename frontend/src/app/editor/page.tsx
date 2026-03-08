@@ -163,7 +163,8 @@ export default function EditorPage() {
           </div>
         </div>
       ) : (
-      <div className="bg-white border-b border-gray-200 shadow-sm sticky top-16 z-30">
+        <>
+        <div className="bg-white border-b border-gray-200 shadow-sm sticky top-16 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
           <span className="text-sm font-medium text-gray-600">
             {saved ? '✅ Sauvegardé' : 'Brouillon non sauvegardé'}
@@ -334,6 +335,8 @@ export default function EditorPage() {
           </div>
         </div>
       </main>
+      </>
+      )}
 
       {/* Modal IA */}
       {showModal && (
@@ -380,7 +383,6 @@ export default function EditorPage() {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 }
