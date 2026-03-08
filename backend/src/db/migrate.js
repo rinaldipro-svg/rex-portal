@@ -6,24 +6,32 @@ const migrateLigneRouge = async () => {
   try {
     console.log('🔄 Migration: Vérification des colonnes...');
 
-    // Vérifier si la colonne ligne_rouge existe
-    const checkColumn = await client.query(`
+    // Vérifier si la colonne ligne_rouge existe ET que lignerouge n'existe pas
+    const checkLineRouge = await client.query(`
       SELECT EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_name = 'fiches' AND column_name = 'ligne_rouge'
-      );
+      ) AS ligne_rouge_exists,
+      EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'fiches' AND column_name = 'lignerouge'
+      ) AS lignerouge_exists;
     `);
 
-    if (checkColumn.rows[0].exists) {
+    const { ligne_rouge_exists, lignerouge_exists } = checkLineRouge.rows[0];
+
+    if (ligne_rouge_exists && !lignerouge_exists) {
       console.log('ℹ️ Renaming ligne_rouge to lignerouge...');
-      // Renommer la colonne seulement si elle existe
+      // Renommer la colonne seulement si elle existe et la cible n'existe pas
       await client.query(`
         ALTER TABLE fiches 
         RENAME COLUMN ligne_rouge TO lignerouge;
       `);
       console.log('✅ Colonne renommée: ligne_rouge → lignerouge');
+    } else if (lignerouge_exists) {
+      console.log('ℹ️ La colonne lignerouge existe déjà (rien à faire)');
     } else {
-      console.log('ℹ️ La colonne ligne_rouge n\'existe pas (probablement déjà renommée)');
+      console.log('ℹ️ Les colonnes n\'existent pas (probablement table vide ou nouvellement créée)');
     }
 
     // Mettre à jour le trigger de recherche si nécessaire
