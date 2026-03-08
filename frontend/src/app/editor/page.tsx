@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/store';
 import { generateApi, fichesApi, templatesApi } from '@/lib/api';
 
-export default function EditorPage() {
+function EditorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated } = useAuthStore();
@@ -384,5 +384,23 @@ export default function EditorPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function EditorLoadingFallback() {
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <div className="text-center">
+        <div className="text-lg font-semibold text-gray-600 mb-2">Chargement...</div>
+      </div>
+    </div>
+  );
+}
+
+export default function EditorPage() {
+  return (
+    <Suspense fallback={<EditorLoadingFallback />}>
+      <EditorContent />
+    </Suspense>
   );
 }
